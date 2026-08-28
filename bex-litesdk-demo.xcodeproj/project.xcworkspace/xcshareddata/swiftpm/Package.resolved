@@ -1,0 +1,15 @@
+{
+  "originHash" : "c6a1f8cb26522cfb9332b8193f94acebd957f364aea9f684e7a94bdd77e48a3e",
+  "pins" : [
+    {
+      "identity" : "ios-lite-sdk",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/BKMExpress/iOS-Lite-SDK.git",
+      "state" : {
+        "branch" : "1.1.0",
+        "revision" : "a4df749b3abcadad1af96bd46bd33e2637d673d7"
+      }
+    }
+  ],
+  "version" : 3
+}
