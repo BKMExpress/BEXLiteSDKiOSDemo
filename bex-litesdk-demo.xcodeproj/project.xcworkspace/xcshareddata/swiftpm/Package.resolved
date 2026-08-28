@@ -6,7 +6,7 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/BKMExpress/iOS-Lite-SDK.git",
       "state" : {
-        "branch" : "1.1.0",
+        "branch" : "main",
         "revision" : "a4df749b3abcadad1af96bd46bd33e2637d673d7"
       }
     }

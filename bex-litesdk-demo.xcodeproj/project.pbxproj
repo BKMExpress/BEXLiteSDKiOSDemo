@@ -383,7 +383,7 @@
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/BKMExpress/iOS-Lite-SDK.git";
 			requirement = {
-				branch = 1.1.0;
+				branch = main;
 				kind = branch;
 			};
 		};
