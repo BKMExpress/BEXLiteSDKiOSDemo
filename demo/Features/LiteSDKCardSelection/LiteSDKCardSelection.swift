@@ -13,37 +13,37 @@ enum LiteSDKCardSelection {
       let name: String
       let number: String
     }
-    
+
     struct BexCard: Equatable {
       static func == (lhs: BexCard, rhs: BexCard) -> Bool {
         lhs.rawValue.id == rhs.rawValue.id
       }
-      
+
       let rawValue: BKMExpress.Card
-      
+
       var id: BKMExpress.Card.ID {
         rawValue.id
       }
     }
-    
+
     case internalCard(InternalCard)
     case bex(BexCard)
-    
+
     var id: BKMExpress.Card.ID {
       switch self {
-      case let .internalCard(card): card.cardID
-      case let .bex(card): card.id
+        case let .internalCard(card): card.cardID
+        case let .bex(card): card.id
       }
     }
-    
+
     var cardId: BKMExpress.Card.ID? {
       switch self {
-      case .internalCard: return nil
-      case let .bex(card): return card.id
+        case .internalCard: return nil
+        case let .bex(card): return card.id
       }
     }
   }
-  
+
   struct Screen: View {
     @State var cards: [Card] = []
     @State var canLinkBex: Bool = false
@@ -52,7 +52,7 @@ enum LiteSDKCardSelection {
     @State var loadingCardId: BKMExpress.Card.ID?
     @State private var selectedCardId: BKMExpress.Card.ID? = nil
     @State private var deletingCardId: BKMExpress.Card.ID? = nil
-    
+
     let api: BKMExpress.API
     let number: BKMExpress.GSMNO
     let amount: Decimal
@@ -63,7 +63,7 @@ enum LiteSDKCardSelection {
     let installmentCount: Int
     let successUrl: String
     let failUrl: String
-    
+
     let onCardAdditionTapped: () -> Void
     let onBKMExpressLinkTapped: (BKMExpress.LinkOTP) -> Void
     let onPaymentTDSRequired: (BKMExpress.TDSInfo) -> Void
@@ -71,7 +71,7 @@ enum LiteSDKCardSelection {
     let onPaymentOTPRequired: (BKMExpress.PaymentOTP) -> Void
     let onPartialRegisterRequired: () -> Void
     let onBack: () -> Void
-    
+
     init(
       api: BKMExpress.API,
       number: BKMExpress.GSMNO,
@@ -109,7 +109,7 @@ enum LiteSDKCardSelection {
       self.onPartialRegisterRequired = onPartialRegisterRequired
       self.onBack = onBack
     }
-    
+
     var body: some View {
       ScrollView {
         VStack(alignment: .leading, spacing: 12) {
@@ -118,25 +118,25 @@ enum LiteSDKCardSelection {
            Text(orderId)
           )
           .font(.subheadline)
-          
+
           Text("Kart listesi (\(cards.filter { $0.cardId != nil }.count))")
             .font(.subheadline.weight(.semibold))
-          
+
           if showsAddCard {
             Button("Kart Ekle") { onCardAdditionTapped() }
               .buttonStyle(.borderedProminent)
               .frame(maxWidth: .infinity)
           }
-          
+
           if canLinkBex {
             Button {
               Task {
                 let response = try await api.linkAccount()
                 switch response {
-                case .recheck:
-                  await checkBKMExpress()
-                case let .verificationRequired(otp):
-                  onBKMExpressLinkTapped(otp)
+                  case .recheck:
+                    await checkBKMExpress()
+                  case let .verificationRequired(otp):
+                    onBKMExpressLinkTapped(otp)
                 }
               }
             } label: {
@@ -145,7 +145,7 @@ enum LiteSDKCardSelection {
             }
             .buttonStyle(.borderedProminent)
           }
-          
+
           if cards.isEmpty {
             Text("Ekli kartınız bulunmamaktadır.")
               .font(.subheadline)
@@ -183,81 +183,81 @@ enum LiteSDKCardSelection {
         autoSelectFirstCardIfNeeded(from: newCards)
       }
     }
-    
+
     @ViewBuilder
     private func cardRow(for card: Card) -> some View {
       switch card {
-      case let .internalCard(internalCard):
-        VStack(alignment: .leading, spacing: 2) {
-          Text(internalCard.name).font(.subheadline.weight(.semibold))
-          Text(internalCard.number).font(.caption).foregroundColor(.secondary)
-        }
-        .padding(12)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(
-          RoundedRectangle(cornerRadius: 12)
-            .fill(Color(UIColor.secondarySystemBackground))
-        )
-        
-      case let .bex(bexCard):
-        let isSelected = selectedCardId == bexCard.id
-        let isDeletingThis = deletingCardId == bexCard.id
-        
-        HStack(spacing: 0) {
+        case let .internalCard(internalCard):
           VStack(alignment: .leading, spacing: 2) {
-            Text(bexCard.rawValue.alias.isEmpty
-                 ? "BKM Express"
-                 : bexCard.rawValue.alias)
-            .font(.subheadline.weight(.semibold))
-            .foregroundColor(.primary)
-            Text(bexCard.rawValue.maskedCardNumber)
-              .font(.caption)
-              .foregroundColor(.secondary)
+            Text(internalCard.name).font(.subheadline.weight(.semibold))
+            Text(internalCard.number).font(.caption).foregroundColor(.secondary)
           }
-          
-          Spacer()
-          
-          if isSelected {
-            Image(systemName: "checkmark.circle.fill")
-              .font(.system(size: 22))
-              .foregroundColor(.accentColor)
-              .padding(.trailing, 8)
-          }
-          
-          Button {
-            deleteCard(bexCard: bexCard)
-          } label: {
-            if isDeletingThis {
-              ProgressView().frame(width: 24, height: 24)
-            } else {
-              Image(systemName: "trash")
-                .font(.system(size: 18))
-                .foregroundColor(Color(UIColor.label).opacity(0.6))
+          .padding(12)
+          .frame(maxWidth: .infinity, alignment: .leading)
+          .background(
+            RoundedRectangle(cornerRadius: 12)
+              .fill(Color(UIColor.secondarySystemBackground))
+          )
+
+        case let .bex(bexCard):
+          let isSelected = selectedCardId == bexCard.id
+          let isDeletingThis = deletingCardId == bexCard.id
+
+          HStack(spacing: 0) {
+            VStack(alignment: .leading, spacing: 2) {
+              Text(bexCard.rawValue.alias.isEmpty
+                   ? "BKM Express"
+                   : bexCard.rawValue.alias)
+              .font(.subheadline.weight(.semibold))
+              .foregroundColor(.primary)
+              Text(bexCard.rawValue.maskedCardNumber)
+                .font(.caption)
+                .foregroundColor(.secondary)
             }
+
+            Spacer()
+
+            if isSelected {
+              Image(systemName: "checkmark.circle.fill")
+                .font(.system(size: 22))
+                .foregroundColor(.accentColor)
+                .padding(.trailing, 8)
+            }
+
+            Button {
+              deleteCard(bexCard: bexCard)
+            } label: {
+              if isDeletingThis {
+                ProgressView().frame(width: 24, height: 24)
+              } else {
+                Image(systemName: "trash")
+                  .font(.system(size: 18))
+                  .foregroundColor(Color(UIColor.label).opacity(0.6))
+              }
+            }
+            .buttonStyle(.plain)
+            .disabled(deletingCardId != nil)
+            .frame(width: 44, height: 44)
           }
-          .buttonStyle(.plain)
-          .disabled(deletingCardId != nil)
-          .frame(width: 44, height: 44)
-        }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 14)
-        .frame(maxWidth: .infinity)
-        .background(
-          RoundedRectangle(cornerRadius: 12)
-            .fill(isSelected
-                  ? Color.accentColor.opacity(0.15)
-                  : Color(UIColor.secondarySystemBackground))
-        )
-        .contentShape(Rectangle())
-        .onTapGesture {
-          guard loadingCardId == nil, deletingCardId == nil else { return }
-          selectedCardId = bexCard.id
-        }
-        .animation(.easeInOut(duration: 0.15), value: isSelected)
+          .padding(.horizontal, 12)
+          .padding(.vertical, 14)
+          .frame(maxWidth: .infinity)
+          .background(
+            RoundedRectangle(cornerRadius: 12)
+              .fill(isSelected
+                    ? Color.accentColor.opacity(0.15)
+                    : Color(UIColor.secondarySystemBackground))
+          )
+          .contentShape(Rectangle())
+          .onTapGesture {
+            guard loadingCardId == nil, deletingCardId == nil else { return }
+            selectedCardId = bexCard.id
+          }
+          .animation(.easeInOut(duration: 0.15), value: isSelected)
       }
     }
-    
-    // MARK: - Helpers
+
+      // MARK: - Helpers
     private func autoSelectFirstCardIfNeeded(from newCards: [Card]) {
       let bexIds = newCards.compactMap { $0.cardId }
       if selectedCardId == nil {
@@ -266,73 +266,73 @@ enum LiteSDKCardSelection {
         selectedCardId = bexIds.first
       }
     }
-    
+
     private func bexCard(withId id: BKMExpress.Card.ID) -> Card.BexCard? {
       for card in cards {
         if case let .bex(b) = card, b.id == id { return b }
       }
       return nil
     }
-    
-    // MARK: - API calls
+
+      // MARK: - API calls
     private func checkBKMExpress() async {
       do {
         let response = try await api.checkStatus()
         switch response {
-        case let .linked(bexCards):
-          cards = bexCards
-            .map { Card.BexCard(rawValue: $0) }
-            .map(Card.bex)
-          canLinkBex = false
-          showsAddCard = true
-          autoSelectFirstCardIfNeeded(from: cards)
-          
-        case .unlinked:
-          canLinkBex = true
-          showsAddCard = false
-          
-        case .unregistered:
-          canLinkBex = false
-          showsAddCard = false
-          onPartialRegisterRequired()
+          case let .linked(bexCards):
+            cards = bexCards
+              .map { Card.BexCard(rawValue: $0) }
+              .map(Card.bex)
+            canLinkBex = false
+            showsAddCard = true
+            autoSelectFirstCardIfNeeded(from: cards)
+
+          case .unlinked:
+            canLinkBex = true
+            showsAddCard = false
+
+          case .unregistered:
+            canLinkBex = false
+            showsAddCard = false
+            onPartialRegisterRequired()
         }
       } catch {
         alert = .init(message: "BKM Express hatası: \(error.localizedDescription)")
       }
     }
-    
+
     private func deleteCard(bexCard: Card.BexCard) {
       let cardId = bexCard.id
       deletingCardId = cardId
-      
+
       Task {
         do {
           let response = try await api.deleteCard(id: cardId)
           switch response {
-          case let .cardDeleted(returnedCards):
-            await MainActor.run {
+            case let .cardDeleted(returnedCards):
+              await MainActor.run {
+                deletingCardId = nil
+                cards = (returnedCards)
+                  .map { Card.BexCard(rawValue: $0) }
+                  .map(Card.bex)
+
+                autoSelectFirstCardIfNeeded(from: cards)
+              }
+            case .accountDeleted:
               deletingCardId = nil
-              cards = (returnedCards)
-                .map { Card.BexCard(rawValue: $0) }
-                .map(Card.bex)
-              
-              autoSelectFirstCardIfNeeded(from: cards)
-            }
-          case .accountDeleted:
-            deletingCardId = nil
-            alert = .init(
-              message: "BKM Express Üyeliğiniz İsteğiniz Üzerine Sonlandırılmıştır.",
-              buttons: .single(
-                .init(
-                  title: "Tamam",
-                  action: {
-                    onBack()
-                  }
+              alert = .init(
+                message: "BKM Express Üyeliğiniz İsteğiniz Üzerine Sonlandırılmıştır.",
+                buttons: .single(
+                  .init(
+                    title: "Tamam",
+                    action: {
+                      onBack()
+                    }
+                  )
                 )
               )
-            )
           }
-          
+
         } catch {
           await MainActor.run {
             deletingCardId = nil
@@ -341,39 +341,41 @@ enum LiteSDKCardSelection {
         }
       }
     }
-    
+
     private func payWithCard(card: Card.BexCard) async {
       loadingCardId = card.id
       defer { loadingCardId = nil }
-      
+
       do {
         let response = try await api.startPayment(
           context: .init(
             cardID: card.rawValue.id,
             security: security,
-            transactionType: transactionType, //transactionID == UUID() by default
+            transactionType: transactionType,
             amount: amount,
             orderID: orderId,
+            date: Date(),
+            transactionID: UUID(),
             installmentCount: .init(installmentCount)!,
             successUrl: successUrl,
             failUrl: failUrl
           )
         )
-        
+
         switch response {
-        case let .tds(tds):
-          guard
-            let _ = tds.tdsURL,
-            let _ = tds.htmlForm
-          else {
-            alert = .init(message: "BKM Express hatası: \(tds.message)")
-            return
-          }
-          onPaymentTDSRequired(tds)
-        case let .otp(otp):
-          onPaymentOTPRequired(otp)
-        case let .control(token):
-          onCheckRequired(token)
+          case let .tds(tds):
+            guard
+              let _ = tds.tdsURL,
+              let _ = tds.htmlForm
+            else {
+              alert = .init(message: "BKM Express hatası: \(tds.message)")
+              return
+            }
+            onPaymentTDSRequired(tds)
+          case let .otp(otp):
+            onPaymentOTPRequired(otp)
+          case let .control(token):
+            onCheckRequired(token)
         }
       } catch {
         alert = .init(message: "BKM Express hatası: \(error.localizedDescription)")
@@ -385,14 +387,14 @@ enum LiteSDKCardSelection {
 fileprivate extension BKMExpress.PaymentSecurity {
   func displayText() -> String{
     switch self {
-    case .tds:
-      "TDS"
-    case .otp:
-      "OTP"
-    case .none:
-      "NONE"
-    @unknown default:
-      fatalError()
+        case .tds:
+        "TDS"
+        case .otp:
+        "OTP"
+        case .none:
+        "NONE"
+        @unknown default:
+        fatalError()
+        }
     }
-  }
 }
