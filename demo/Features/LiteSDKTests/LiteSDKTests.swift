@@ -9,7 +9,7 @@ import SwiftUI
 
 enum LiteSDKTests {
   struct Screen: View {
-    // MARK: State
+      // MARK: State
     @AppStorage("lite_merchantID") var merchantID = ""
     @AppStorage("lite_merchantUserID") var merchantUserID = ""
     @AppStorage("lite_phoneNumber") var phoneNumber = ""
@@ -32,11 +32,11 @@ enum LiteSDKTests {
       return nf
     }()
     @State var integerFormatter: NumberFormatter = {
-        var nf = NumberFormatter()
-        nf.numberStyle = .none
-        nf.maximumFractionDigits = 0
-        nf.minimumFractionDigits = 0
-        return nf
+      var nf = NumberFormatter()
+      nf.numberStyle = .none
+      nf.maximumFractionDigits = 0
+      nf.minimumFractionDigits = 0
+      return nf
     }()
     @State var sdkInitializationInProgress = false
     @State var alert: AlertState?
@@ -54,8 +54,8 @@ enum LiteSDKTests {
       let failUrl: String
     }
     var onStarted: ((OnStartedInfo) -> Void)?
-
-    // MARK: UI
+    
+      // MARK: UI
     var body: some View {
       VStack {
         Text("Uygulama şu an '\(mode.name)' modundadır.")
@@ -196,7 +196,7 @@ enum LiteSDKTests {
           
         }
         .scrollIndicators(.hidden)
-
+        
         if sdkInitializationInProgress {
           ProgressView()
         } else {
@@ -225,7 +225,7 @@ enum LiteSDKTests {
       }
     }
     
-    // MARK: Utilities
+      // MARK: Utilities
     private func startButtonTapped() {
       guard let number = try? BKMExpress.GSMNO(phoneNumber)
       else {
@@ -253,11 +253,14 @@ enum LiteSDKTests {
             context: .init(
               authToken: token,
               merchantID: merchantID,
-              merchantUserID: merchantUserID,
               gsmNo: number,
+              merchantUserID: merchantUserID,
+              transactionID: UUID(),
+              successUrl: successUrl,
+              failUrl: failUrl,
               currencyCode: currency,
-              transactionType: transactionType,
               installmentCount: .init(installmentCount)!,
+              transactionType: transactionType,
               mode: mode.sdkMode,
             )
           )
@@ -282,7 +285,7 @@ enum LiteSDKTests {
           } else {
             alert = .init(message: "Baslatilamadi. Lütfen para miktarını girin")
           }
-         
+          
           
         } catch {
           alert = .init(message: "Baslatilamadi. Kod: \(error.code ?? -1) \n\n \(error.message) ")
@@ -292,13 +295,13 @@ enum LiteSDKTests {
   }
 }
 
-// MARK: Extensions
+  // MARK: Extensions
 private extension Mode {
   var sdkMode: BKMExpress._Mode {
     switch self {
-    case .test: .test
-    case .preprod: .preprod
-    case .production: .production
+      case .test: .test
+      case .preprod: .preprod
+      case .production: .production
     }
   }
 }
@@ -311,6 +314,3 @@ private extension Mode {
   }
 }
 #endif
-
-
-
