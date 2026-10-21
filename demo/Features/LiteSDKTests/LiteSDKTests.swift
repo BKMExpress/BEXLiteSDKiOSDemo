@@ -18,6 +18,7 @@ enum LiteSDKTests {
     @AppStorage("lite_installmentCount") var installmentCount: Int = 1
     @AppStorage("mode") var mode: Mode = .default
     @AppStorage("lite_amount") var amount: Double?
+    @AppStorage("lite_transactionID") var transactionId = ""
     @AppStorage("lite_orderID") var orderId = ""
     @AppStorage("lite_paymentSecurity") var security: BKMExpressLiteSDK.BKMExpress.PaymentSecurity = .none
     @AppStorage("lite_transactionType") var transactionType: BKMExpressLiteSDK.BKMExpress.TransactionType = .sale
@@ -40,7 +41,7 @@ enum LiteSDKTests {
     }()
     @State var sdkInitializationInProgress = false
     @State var alert: AlertState?
-    
+
     struct OnStartedInfo {
       let api: BKMExpress.API
       let gsmno: BKMExpress.GSMNO
@@ -48,155 +49,166 @@ enum LiteSDKTests {
       let security: BKMExpressLiteSDK.BKMExpress.PaymentSecurity
       let transactionType: BKMExpressLiteSDK.BKMExpress.TransactionType
       let orderId: String
+      let transactionID: String
       let installmentCount: Int
       let currencySymbol: String
       let successUrl: String
       let failUrl: String
     }
     var onStarted: ((OnStartedInfo) -> Void)?
-    
+
       // MARK: UI
     var body: some View {
       VStack {
         Text("Uygulama şu an '\(mode.name)' modundadır.")
-        
+
         ScrollView {
           VStack(alignment: .leading) {
             Text("Token")
               .bold()
-            
+
             TextField("", text: $token, axis: .vertical)
               .lineLimit(5)
               .textFieldStyle(.roundedBorder)
           }
-          
+
           Divider()
-          
+
           VStack(alignment: .leading) {
             Text("Merchant ID")
               .bold()
-            
+
             TextField("", text: $merchantID)
               .textFieldStyle(.roundedBorder)
           }
-          
+
           Divider()
-          
+
           VStack(alignment: .leading) {
             Text("Merchant User ID")
               .bold()
-            
+
             TextField("", text: $merchantUserID)
               .textFieldStyle(.roundedBorder)
           }
-          
+
           Divider()
-          
+
           VStack(alignment: .leading) {
             Text("Telefon Numarası")
               .bold()
-            
+
             TextField("", text: $phoneNumber)
               .keyboardType(.decimalPad)
               .textFieldStyle(.roundedBorder)
           }
-          
+
           Divider()
-          
+
+          VStack(alignment: .leading) {
+            Text("Transaction ID")
+              .bold()
+
+            TextField("Boş bırakılırsa otomatik üretilir", text: $transactionId)
+              .textFieldStyle(.roundedBorder)
+          }
+
+          Divider()
+
           VStack(alignment: .leading) {
             Text("Order ID")
               .bold()
-            
+
             TextField("", text: $orderId)
               .textFieldStyle(.roundedBorder)
           }
-          
+
           Divider()
-          
+
           VStack(alignment: .leading) {
             Text("Tutar")
               .bold()
-            
+
             TextField("", value: $amount, formatter: numberFormatter)
               .keyboardType(.numbersAndPunctuation)
               .textFieldStyle(.roundedBorder)
           }
-          
+
           Divider()
-          
+
           VStack(alignment: .leading) {
             Text("Para Birimi")
               .bold()
-            
+
             TextField("", text: $currency)
               .keyboardType(.alphabet)
               .textFieldStyle(.roundedBorder)
           }
-          
+
           Divider()
-          
+
           VStack(alignment: .leading) {
             Text("Taksit Sayısı")
               .bold()
-            
+
             TextField("", value: $installmentCount, formatter: integerFormatter)
               .keyboardType(.decimalPad)
               .textFieldStyle(.roundedBorder)
           }
-          
+
           Divider()
-          
+
           HStack {
             Text("Güvenlik Düzeyi")
               .bold()
-            
+
             Spacer()
-            
+
             Picker("Güvenlik Düzeyi", selection: $security) {
               ForEach(BKMExpress.PaymentSecurity.allCases, id: \.self) { kind in
                 Text(kind.rawValue).tag(kind)
               }
             }
           }
-          
+
           Divider()
-          
+
           HStack {
             Text("İşlem Türü")
               .bold()
-            
+
             Spacer()
-            
+
             Picker("İşlem Türü", selection: $transactionType) {
               ForEach(BKMExpress.TransactionType.allCases, id: \.self) { kind in
                 Text(kind.rawValue).tag(kind)
               }
             }
           }.padding(.bottom, 16)
-          
+
           Divider()
-          
+
           VStack(alignment: .leading) {
             Text("Success Url")
               .bold()
-            
+
             TextField("", text: $successUrl)
               .textFieldStyle(.roundedBorder)
           }
-          
+
           Divider()
-          
+
           VStack(alignment: .leading) {
             Text("Error Url")
               .bold()
-            
+
             TextField("", text: $failUrl)
               .textFieldStyle(.roundedBorder)
           }.padding(.bottom, 16)
-          
+
         }
         .scrollIndicators(.hidden)
-        
+
         if sdkInitializationInProgress {
           ProgressView()
         } else {
@@ -224,7 +236,7 @@ enum LiteSDKTests {
         }
       }
     }
-    
+
       // MARK: Utilities
     private func startButtonTapped() {
       guard let number = try? BKMExpress.GSMNO(phoneNumber)
@@ -235,11 +247,11 @@ enum LiteSDKTests {
         )
         return
       }
-      
+
       Task {
         sdkInitializationInProgress = true
         defer { sdkInitializationInProgress = false }
-        
+
         guard !token.isEmpty else {
           alert = .init(
             title: "Hata!",
@@ -247,7 +259,11 @@ enum LiteSDKTests {
           )
           return
         }
-        
+
+        if transactionId.trimmingCharacters(in: .whitespaces).isEmpty {
+          transactionId = UUID().uuidString
+        }
+
         do throws(BKMExpress.Failure) {
           let api = try await BKMExpress.initialize(
             context: .init(
@@ -255,19 +271,19 @@ enum LiteSDKTests {
               merchantID: merchantID,
               gsmNo: number,
               merchantUserID: merchantUserID,
-              transactionID: UUID(),
+              transactionID: transactionId,
               successUrl: successUrl,
               failUrl: failUrl,
               currencyCode: currency,
               installmentCount: .init(installmentCount)!,
               transactionType: transactionType,
-              mode: mode.sdkMode,
+              mode: mode.sdkMode
             )
           )
           if let amount {
             let decimal = Decimal(amount)
             let installment = Int(installmentCount)
-            
+
             onStarted?(
               .init(
                 api: api,
@@ -276,6 +292,7 @@ enum LiteSDKTests {
                 security: security,
                 transactionType: transactionType,
                 orderId: orderId,
+                transactionID: transactionId,
                 installmentCount: installment,
                 currencySymbol: api.currencySymbol(),
                 successUrl: successUrl,
@@ -285,8 +302,6 @@ enum LiteSDKTests {
           } else {
             alert = .init(message: "Baslatilamadi. Lütfen para miktarını girin")
           }
-          
-          
         } catch {
           alert = .init(message: "Baslatilamadi. Kod: \(error.code ?? -1) \n\n \(error.message) ")
         }

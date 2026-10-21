@@ -60,6 +60,7 @@ enum LiteSDKCardSelection {
     let security: BKMExpress.PaymentSecurity
     let transactionType: BKMExpress.TransactionType
     let orderId: String
+    let transactionID: String
     let installmentCount: Int
     let successUrl: String
     let failUrl: String
@@ -80,6 +81,7 @@ enum LiteSDKCardSelection {
       security: BKMExpress.PaymentSecurity,
       transactionType: BKMExpress.TransactionType,
       orderId: String,
+      transactionID: String,
       installmentCount: Int,
       successUrl: String,
       failUrl: String,
@@ -103,6 +105,7 @@ enum LiteSDKCardSelection {
       self.security = security
       self.transactionType = transactionType
       self.orderId = orderId
+      self.transactionID = transactionID
       self.installmentCount = installmentCount
       self.successUrl = successUrl
       self.failUrl = failUrl
@@ -116,6 +119,12 @@ enum LiteSDKCardSelection {
           (Text("ORDER ID: ")
             .fontWeight(.semibold) +
            Text(orderId)
+          )
+          .font(.subheadline)
+
+          (Text("TRANSACTION ID: ")
+            .fontWeight(.semibold) +
+           Text(transactionID)
           )
           .font(.subheadline)
 
@@ -355,7 +364,7 @@ enum LiteSDKCardSelection {
             amount: amount,
             orderID: orderId,
             date: Date(),
-            transactionID: UUID(),
+            transactionID: transactionID,
             installmentCount: .init(installmentCount)!,
             successUrl: successUrl,
             failUrl: failUrl
@@ -387,14 +396,14 @@ enum LiteSDKCardSelection {
 fileprivate extension BKMExpress.PaymentSecurity {
   func displayText() -> String{
     switch self {
-        case .tds:
+      case .tds:
         "TDS"
-        case .otp:
+      case .otp:
         "OTP"
-        case .none:
+      case .none:
         "NONE"
-        @unknown default:
+      @unknown default:
         fatalError()
-        }
     }
+  }
 }
